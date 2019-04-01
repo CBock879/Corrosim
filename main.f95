@@ -1,7 +1,35 @@
+!**********************************************
+! CORROSIM
+! (c) Christopher Bock
+!
+! An attempt to simulate corrosion in 2d
+!
+!       
+!
+!**********************************************
 PROGRAM main
+        USE linalg
         IMPLICIT NONE
 
+        INTEGER                         :: l , i
+        REAL,DIMENSION(:,:),ALLOCATABLE     :: surface
+        REAL                            :: t
+        l = 4 
+        
+        ALLOCATE(surface(l,3))
 
+
+        !testing conditions
+        surface(1,:) = (/1,0,0/)
+        surface(2,:) = (/0,1,0/)
+        surface(3,:) = (/-1,0,0/)
+        surface(4,:) = (/0,-1,0/)
+
+        CALL RK4(surface,t,0.1,l)
+
+        WRITE(*,*) surface
+
+        `
 CONTAINS
 SUBROUTINE  RK4(x,t,dt,l)
       !x = x(t+dt)
@@ -10,7 +38,7 @@ SUBROUTINE  RK4(x,t,dt,l)
       !size of the state matrix
       INTEGER                           :: l 
       REAL                              :: dt, t
-      REAL, ALLOCATABLE, DIMENSION (l,3)  :: x,k1,k2,k3,k4
+      REAL, ALLOCATABLE, DIMENSION (:,:)  :: x,k1,k2,k3,k4
 
       k1 = dt * funct(x,t)
       k2 = dt * funct(x+k1/2,t+dt/2,l)
@@ -32,18 +60,21 @@ END SUBROUTINE
 !********************************************
 FUNCTION funct(state,t,l)
         IMPLICIT NONE
-        REAL, ALLOCATABLE ,DIMENSION (l,3) :: funct, state  
+        REAL, ALLOCATABLE ,DIMENSION (:,:) :: funct, state  
         REAL                  :: t
         INTEGER               :: l,i
+        REAL,DIMENSION(3)     :: orienation
+
+        orientation  = (/0,0,1/) 
 
 
         !first element (Assumes closed region)
-        funct(1,:) = state(1,:) + elementval(state(l,:),state(1,:),state(2,:))        
+        funct(1,:) = state(1,:) + elementval(state(l,:),state(1,:),state(2,:),orientation)        
 
         DO i = 2, l-1, 1
-                funct(i,:) = state(i,:) + elementval(state(i-1,:),state(i,:),state(i+1,:))        
+                funct(i,:) = state(i,:) + elementval(state(i-1,:),state(i,:),state(i+1,:),orientation)        
         END DO
-        funct(l,:) = state(l) + elementval(state(l-1,:),state(l,:),state(1,:))
+        funct(l,:) = state(l) + elementval(state(l-1,:),state(l,:),state(1,:),orientation)
 
 
 END FUNCTION
@@ -74,6 +105,7 @@ FUNCTION elementval(ua,ub,uc,orientation)
         elementval =  area * alpha * unorm
         
 END FUNCTION
+!comment style
 !*********************************************
 !FUNCTION
 ! Args:
